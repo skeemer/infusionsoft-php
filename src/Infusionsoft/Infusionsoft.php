@@ -213,19 +213,21 @@ class Infusionsoft {
 	 */
 	public function requestAccessToken($code)
 	{
-		$params = array(
-			'client_id'     => $this->clientId,
-			'client_secret' => $this->clientSecret,
-			'code'          => $code,
-			'grant_type'    => 'authorization_code',
-			'redirect_uri'  => $this->redirectUri,
-		);
+		$options = [
+			'body' => [
+				'client_id'     => $this->clientId,
+				'client_secret' => $this->clientSecret,
+				'code'          => $code,
+				'grant_type'    => 'authorization_code',
+				'redirect_uri'  => $this->redirectUri,
+			],
+		];
 
 		try
 		{
 			$guzzle = new Client();
 
-			$response = $guzzle->post($this->tokenUri, array(), $params);
+			$response = $guzzle->post($this->tokenUri, array(), $options);
 
 			$tokenInfo = $response->json();
 
@@ -245,20 +247,21 @@ class Infusionsoft {
 	 */
 	public function refreshAccessToken()
 	{
-		$headers = array(
-			'Authorization' => 'Basic ' . base64_encode($this->clientId . ':' . $this->clientSecret),
-		);
-
-		$params = array(
-			'grant_type'    => 'refresh_token',
-			'refresh_token' => $this->getToken()->getRefreshToken(),
-		);
+		$options = [
+			'headers'	=> [
+				'Authorization' => 'Basic ' . base64_encode($this->clientId . ':' . $this->clientSecret),
+			],
+			'body'	=> [
+				'grant_type'    => 'refresh_token',
+				'refresh_token' => $this->getToken()->getRefreshToken(),
+			],
+		];
 
 		try
 		{
 			$guzzle = new Client();
 
-			$response = $guzzle->post($this->tokenUri, $headers, $params);
+			$response = $guzzle->post($this->tokenUri, $options);
 
 			$tokenInfo = $response->json();
 
