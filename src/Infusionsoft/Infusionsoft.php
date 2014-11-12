@@ -227,7 +227,7 @@ class Infusionsoft {
 		{
 			$guzzle = new Client();
 
-			$response = $guzzle->post($this->tokenUri, array(), $options);
+			$response = $guzzle->post($this->tokenUri, $options);
 
 			$tokenInfo = $response->json();
 
