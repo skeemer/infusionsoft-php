@@ -15,9 +15,9 @@
     ],
     "require": {
         "php": ">=5.3.3",
-        "ext-curl": "*",
-        "guzzle/guzzle": "3.8.*",
-        "lstrojny/fxmlrpc": "0.8.*"
+        "guzzlehttp/guzzle": "4.*",
+        "guzzlehttp/log-subscriber": "~1.0",
+        "lstrojny/fxmlrpc": "dev-master"
     },
     "require-dev": {
         "mockery/mockery": "dev-master",

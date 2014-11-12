@@ -64,7 +64,7 @@ class InfusionsoftTest extends \PHPUnit_Framework_TestCase
 
 	public function testDefaultHttpLogAdapter()
 	{
-		$this->assertInstanceOf('Guzzle\Log\ArrayLogAdapter', $this->ifs->getHttpLogAdapter());
+		$this->assertInstanceOf('Infusionsoft\ArrayLogger', $this->ifs->getHttpLogAdapter());
 	}
 
 	public function testSettingClientId()
@@ -97,7 +97,7 @@ class InfusionsoftTest extends \PHPUnit_Framework_TestCase
 
 	public function testSettingHttpLogAdapter()
 	{
-		$this->ifs->setHttpLogAdapter(m::mock('Guzzle\Log\LogAdapterInterface'));
-		$this->assertInstanceOf('Guzzle\Log\LogAdapterInterface', $this->ifs->getHttpLogAdapter());
+		$this->ifs->setHttpLogAdapter(m::mock('Psr\Log\LoggerInterface'));
+		$this->assertInstanceOf('Psr\Log\LoggerInterface', $this->ifs->getHttpLogAdapter());
 	}
 }

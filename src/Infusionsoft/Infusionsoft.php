@@ -2,7 +2,12 @@
 
 namespace Infusionsoft;
 
+use fXmlRpc;
 use fXmlRpc\Exception\ExceptionInterface as fXmlRpcException;
+use Psr\Log\LoggerInterface;
+use GuzzleHttp\Client;
+use GuzzleHttp\Exception;
+use GuzzleHttp\Subscriber\Log;
 
 class Infusionsoft {
 
@@ -47,7 +52,7 @@ class Infusionsoft {
 	protected $debug = false;
 
 	/**
-	 * @var \Guzzle\Log\LogAdapterInterface
+	 * @var \Psr\Log\LoggerInterface
 	 */
 	protected $httpLogAdapter;
 
@@ -218,9 +223,9 @@ class Infusionsoft {
 
 		try
 		{
-			$guzzle = new \Guzzle\Http\Client();
+			$guzzle = new Client();
 
-			$response = $guzzle->post($this->tokenUri, array(), $params)->send();
+			$response = $guzzle->post($this->tokenUri, array(), $params);
 
 			$tokenInfo = $response->json();
 
@@ -228,7 +233,7 @@ class Infusionsoft {
 
 			return $this->getToken();
 		}
-		catch (\Guzzle\Http\Exception\ClientErrorResponseException $e)
+		catch (Exception\TransferException $e)
 		{
 			throw new InfusionsoftException('There was a problem while requesting the access token.');
 		}
@@ -251,9 +256,9 @@ class Infusionsoft {
 
 		try
 		{
-			$guzzle = new \Guzzle\Http\Client();
+			$guzzle = new Client();
 
-			$response = $guzzle->post($this->tokenUri, $headers, $params)->send();
+			$response = $guzzle->post($this->tokenUri, $headers, $params);
 
 			$tokenInfo = $response->json();
 
@@ -261,7 +266,7 @@ class Infusionsoft {
 
 			return $this->getToken();
 		}
-		catch (\Guzzle\Http\Exception\ClientErrorResponseException $e)
+		catch (Exception\TransferException $e)
 		{
 			throw new InfusionsoftException('There was a problem while requesting the refresh token.');
 		}
@@ -284,44 +289,40 @@ class Infusionsoft {
 	}
 
 	/**
-	 * @return \Guzzle\Http\Client
+	 * @return \GuzzleHttp\Client
 	 */
 	public function getHttpClient()
 	{
-		$httpClient = new \Guzzle\Http\Client();
+		$httpClient = new Client();
 
 		if ($this->debug)
 		{
-			$logPlugin = new \Guzzle\Plugin\Log\LogPlugin(
-				$this->getHttpLogAdapter(),
-				\Guzzle\Log\MessageFormatter::DEBUG_FORMAT
-			);
-
-			$httpClient->addSubscriber($logPlugin);
+			$subscriber = new Log\LogSubscriber(null, Log\Formatter::DEBUG);
+			$httpClient->getEmitter()->attach($subscriber);
 		}
 
 		return $httpClient;
 	}
 
 	/**
-	 * @return \Guzzle\Log\LogAdapterInterface
+	 * @return \Psr\Log\LoggerInterface
 	 */
 	public function getHttpLogAdapter()
 	{
 		// If a log adapter hasn't been set, we default to the array adapter
 		if ( ! $this->httpLogAdapter)
 		{
-			$this->httpLogAdapter = new \Guzzle\Log\ArrayLogAdapter;
+			$this->httpLogAdapter = new ArrayLogger();
 		}
 
 		return $this->httpLogAdapter;
 	}
 
 	/**
-	 * @param \Guzzle\Log\LogAdapterInterface $httpLogAdapter
+	 * @param \Psr\Log\LoggerInterface $httpLogAdapter
 	 * @return \Infusionsoft\Infusionsoft
 	 */
-	public function setHttpLogAdapter(\Guzzle\Log\LogAdapterInterface $httpLogAdapter)
+	public function setHttpLogAdapter(LoggerInterface $httpLogAdapter)
 	{
 		$this->httpLogAdapter = $httpLogAdapter;
 
@@ -335,7 +336,8 @@ class Infusionsoft {
 	{
 		if ( ! $this->debug) return array();
 
-		return $this->getHttpLogAdapter()->getLogs();
+		//return $this->getHttpLogAdapter()->getLogs();
+		return [];
 	}
 
 	/**
@@ -356,7 +358,7 @@ class Infusionsoft {
 
 		// Although we are using fXmlRpc to handle the XML-RPC formatting, we
 		// can still use Guzzle as our HTTP client which is much more robust.
-		$client = new \fXmlRpc\Client($url, new \fXmlRpc\Transport\GuzzleBridge($this->getHttpClient()));
+		$client = new fXmlRpc\Client($url, new fXmlRpc\Transport\Guzzle4Bridge($this->getHttpClient()));
 
 		$args = func_get_args();
 		$method = array_shift($args);
